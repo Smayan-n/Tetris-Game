@@ -90,6 +90,7 @@ class Piece():
         for r in range(len(self.piece)):
             for c in range(len(self.piece[r])):
                 if(self.piece[r][c] != 0):
+                    print(self.piece)
                     self.piece[r][c][0] += row
                     self.piece[r][c][1] += col
 
@@ -97,7 +98,8 @@ class Piece():
                     if r == self.piece_height - 1:
                         if self.piece[r][c][0] == GRID.getRows() - 1:
                             #adding piece to game board
-                            GAMEBOARD.addFinalPiece(self.piece)
+                            
+                            GAMEBOARD.addSettledPiece(self.piece)
                             GAMEBOARD.pieces.append(Piece())
                             GAMEBOARD.pieces.pop(0)
 
@@ -138,7 +140,6 @@ class GameBoard():
 
 
     def drawPieces(self):
-        print(self.pieces[0].piece)
         for piece in self.pieces:
             piece.fall()              
             piece.draw()  
@@ -148,14 +149,16 @@ class GameBoard():
         for r in range(len(self.board)):
             for c in range(len(self.board[r])):
                 if self.board[r][c] != 0:
-                    pygame.draw.rect(SCREEN, RED, (CELL_SIZE * c, CELL_SIZE * r, CELL_SIZE, CELL_SIZE))
+                    pygame.draw.rect(SCREEN, RED, (CELL_SIZE * (c + COL_SPACE), CELL_SIZE * r, CELL_SIZE, CELL_SIZE))
 
     #adds piece to game board after it reaches bottom
-    def addFinalPiece(self, piece):
+    def addSettledPiece(self, piece):
         for r in range(len(piece)):
             for c in range(len(piece[r])):
                 if piece[r][c] != 0:
-                    self.board[piece[r][c][0]][piece[r][c][1]] = piece[r][c]
+                    row = piece[r][c][0]
+                    col = piece[r][c][1] - COL_SPACE
+                    self.board[row][col] = piece[r][c]
 
 
 #NOTE: Display graphics method runs slower than the pygame mainloop
@@ -192,22 +195,18 @@ def main():
             #key events
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
-                    print("click")
                     GAMEBOARD.pieces[0].move(-1)
                 if event.key == pygame.K_RIGHT:
-                    print("click")
                     GAMEBOARD.pieces[0].move(1)
                 if event.key == pygame.K_UP:
-                    print("click")
+                    pass
                 if event.key == pygame.K_DOWN:
-                    print("click")
+                    pass
 
         # keys = pygame.key.get_pressed()
         # if keys[pygame.K_LEFT]:
-        #     print("click")
         #     GAMEBOARD.pieces[0].move(-1)
         # if keys[pygame.K_RIGHT]:
-        #     print("click")
         #     GAMEBOARD.pieces[0].move(1)
 
         #calling graphics methods
