@@ -178,7 +178,7 @@ class Piece():
 
         #initial starting row and column of piece (top left block)
         #COL_SPCAE is the starting column here
-        self.start_row = -2
+        self.start_row = 0 #NOTE figure out why pieces spawning lower
         self.start_col = 3
 
         self.rotation = 0
