@@ -1,10 +1,10 @@
 #Tetris with pygame
-from cgitb import reset
-from telnetlib import GA
+
+from copy import deepcopy
 import pygame, sys, time, math, random
+from constants import *
 
 pygame.init()
-
 
 #grid class - draws grid on screen
 class Grid():
@@ -27,6 +27,7 @@ class Grid():
         for x in range(COL_SPACE, self.cols + COL_SPACE + 1):
             pygame.draw.line(SCREEN, BLACK, (x * CELL_SIZE, 0 * CELL_SIZE), (x * CELL_SIZE, self.height), 1)
 
+    #getter methods
     def getRows(self):
         return self.rows
     def getCols(self):
@@ -34,154 +35,23 @@ class Grid():
     
 #handles individual tetris pieces
 class Piece():
-    #class static variable
-
-    #0's are empty spaces
-    #1's are filled spaces
-    possible_pieces = [
-        #straight
-            [
-                [
-                [0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0],
-                [1, 1, 1, 1, 0],
-                [0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0],
-                ],
-                [
-                [0, 0, 1, 0, 0],
-                [0, 0, 1, 0, 0],
-                [0, 0, 1, 0, 0],
-                [0, 0, 1, 0, 0],
-                [0, 0, 0, 0, 0],
-                ]
-            ],
-            #square 
-            [
-                [ 
-                [0, 0, 0, 0, 0],
-                [0, 1, 1, 0, 0],
-                [0, 1, 1, 0, 0],
-                [0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0],
-                ]
-            ], 
-            #l-shape
-            [
-                [
-                [0, 0, 0, 0, 0],
-                [0, 0, 1, 0, 0],
-                [0, 0, 1, 0, 0],
-                [0, 0, 1, 1, 0],
-                [0, 0, 0, 0, 0],
-                ],
-                [
-                [0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0],
-                [0, 1, 1, 1, 0],
-                [0, 1, 0, 0, 0],
-                [0, 0, 0, 0, 0],
-                ],
-                [
-                [0, 0, 0, 0, 0],
-                [0, 1, 1, 0, 0],
-                [0, 0, 1, 0, 0],
-                [0, 0, 1, 0, 0],
-                [0, 0, 0, 0, 0],
-                ],
-                [
-                [0, 0, 0, 0, 0],
-                [0, 0, 0, 1, 0],
-                [0, 1, 1, 1, 0],
-                [0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0],
-                ],
-
-            ], 
-            #z-shape NOTE: there should be more shapes (this one may be wrong)
-            [
-                [
-                [0, 0, 0, 0, 0],
-                [0, 1, 1, 0, 0],
-                [0, 0, 1, 1, 0],
-                [0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0],
-                ],
-                [
-                [0, 0, 0, 0, 0],
-                [0, 0, 1, 0, 0],
-                [0, 1, 1, 0, 0],
-                [0, 1, 0, 0, 0],
-                [0, 0, 0, 0, 0],
-                ],
-                [
-                [0, 0, 0, 0, 0],
-                [0, 0, 1, 1, 0],
-                [0, 1, 1, 0, 0],
-                [0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0],
-                ],
-                [
-                [0, 0, 0, 0, 0],
-                [0, 0, 1, 0, 0],
-                [0, 0, 1, 1, 0],
-                [0, 0, 0, 1, 0],
-                [0, 0, 0, 0, 0],
-                ],
-                
-            ], 
-            #t-shape
-            [
-                [
-                [0, 0, 0, 0, 0],
-                [0, 0, 1, 0, 0],
-                [0, 1, 1, 1, 0],
-                [0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0],
-                ],
-                [
-                [0, 0, 0, 0, 0],
-                [0, 0, 1, 0, 0],
-                [0, 0, 1, 1, 0],
-                [0, 0, 1, 0, 0],
-                [0, 0, 0, 0, 0],
-                ],
-                [
-                [0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0],
-                [0, 1, 1, 1, 0],
-                [0, 0, 1, 0, 0],
-                [0, 0, 0, 0, 0],
-                ],
-                [
-                [0, 0, 0, 0, 0],
-                [0, 0, 1, 0, 0],
-                [0, 1, 1, 0, 0],
-                [0, 0, 1, 0, 0],
-                [0, 0, 0, 0, 0],
-                ],
-
-            ]
-  
-    ]
 
     def __init__(self):
-        #choosing random piece and color
-        # self.selection_index = random.randint(0, len(Piece.possible_pieces) - 1)
-        # self.piece = Piece.possible_pieces[self.selection_index]
-        # self.color = COLORS[self.selection_index]
-        # self.piece = Piece.possible_pieces[4]
-        self.selection_index = random.randint(0, len(Piece.possible_pieces) - 1)
-        self.piece = Piece.possible_pieces[self.selection_index][0]
-        self.color = COLORS[self.selection_index]
-
 
         #initial starting row and column of piece (top left block)
         #COL_SPCAE is the starting column here
-        self.start_row = 0 #NOTE figure out why pieces spawning lower
+        self.start_row = -1 #NOTE figure out why pieces are spawning lower
         self.start_col = 3
 
+        #used to determine which rotation map of the piece to load
         self.rotation = 0
+
+        #choosing random piece and color
+        self.piece_selection_index = random.randint(0, len(PIECE_TEMPLATES) - 1)
+        self.num_rotation_maps = len(PIECE_TEMPLATES[self.piece_selection_index])
+
+        self.piece = PIECE_TEMPLATES[self.piece_selection_index][self.rotation % self.num_rotation_maps]
+        self.color = COLORS[self.piece_selection_index]
 
         #initialize start postion of piece
         self.initPiecePos()
@@ -197,25 +67,20 @@ class Piece():
     
     #function to change coordinates of piece - also checks if piece is out of bounds
     def move(self, row_shift, col_shift):
-        #check for left and right bounds - only updatePos piece if the updatePos legal(no other piece in the way)
-        for coord in self.getKeyBlocks()[0]:
-            if coord[1] + col_shift <= GAMEBOARD.getLeftObstructingCol(coord[0], coord[1]):
-                return
+        print(GAMEBOARD.isInBounds(self.piece))
+        # #check for bounds - only updatePos piece if the next position of the piece legal(no other piece in the way)
+        # #left
+        # for coord in self.getKeyBlocks()[0]:
+        #     if coord[1] + col_shift <= GAMEBOARD.getLeftObstructingCol(coord[0], coord[1]):
+        #         return
+        # #right
+        # for coord in self.getKeyBlocks()[1]:
+        #     if coord[1] + col_shift >= GAMEBOARD.getRightObstructingCol(coord[0], coord[1]):
+        #         return
 
-        for coord in self.getKeyBlocks()[1]:
-            if coord[1] + col_shift >= GAMEBOARD.getRightObstructingCol(coord[0], coord[1]):
-                return
-
-        #updatePos
-        for r in range(len(self.piece)):
-            for c in range(len(self.piece[r])):
-                if(self.piece[r][c] != 0):
-                    self.piece[r][c][0] += row_shift
-                    self.piece[r][c][1] += col_shift
-    
-        #checks if piece makes it to the bottom or sits on top of another piece- after piece has been moved completely
+        #checks if piece makes it to the bottom or sits on top of another piece
         for coord in self.getKeyBlocks()[2]:
-            if (coord[0] + row_shift >= GAMEBOARD.getRowMaxHeight(coord[1], coord[0])):
+            if (coord[0] + row_shift >= GAMEBOARD.getBottomObstructingRow(coord[1], coord[0])):
                 #if it does, then the piece is placed on the board
                 #adding piece to game board
                 GAMEBOARD.addSettledPiece(self.piece)
@@ -223,7 +88,20 @@ class Piece():
                 GAMEBOARD.current_piece = Piece()
                 break
 
-    
+        test_piece = deepcopy(self.piece)
+
+        #updatePos
+        for r in range(len(test_piece)):
+            for c in range(len(test_piece[r])):
+                if(test_piece[r][c] != 0):
+                    test_piece[r][c][0] += row_shift
+                    test_piece[r][c][1] += col_shift
+
+        if GAMEBOARD.isInBounds(test_piece):
+            self.piece = test_piece
+        else:
+            return
+                
     #draw's piece
     def draw(self):
         for r in range(len(self.piece)):
@@ -238,7 +116,6 @@ class Piece():
     #updatePos piece pos (move left or right)
     def updatePos(self, dir):
         self.move(0, dir)
-
         #redners piece on screen (updatePos before graphics function so there is immideiate change)
         self.draw()
 
@@ -246,25 +123,24 @@ class Piece():
     def rotatePiece(self):
         self.rotation += 1
 
-        center = self.piece[len(self.piece) // 2][len(self.piece[0]) // 2]
+        #get center coordinate and center index of the piece before rotation
+        center_coord = self.piece[len(self.piece) // 2][len(self.piece[0]) // 2]
         center_index = [len(self.piece) // 2, len(self.piece[0]) // 2]
-        print(center)
-        print(self.piece)
 
-        self.piece = Piece.possible_pieces[self.selection_index][self.rotation % len(Piece.possible_pieces[self.selection_index])]
+        #load the same piece with different rotation map
+        self.piece = PIECE_TEMPLATES[self.piece_selection_index][self.rotation % self.num_rotation_maps]
 
+        #using center_coord and center_index to calculate and set coordinates of new rotation map
         for r in range(len(self.piece)):
             for c in range(len(self.piece[r])):
                 if(self.piece[r][c] != 0):
-                    diffR = r - center_index[0]
-                    diffC = c - center_index[1]
-
-                    self.piece[r][c] = [center[0] + diffR, center[1] + diffC]
-
-        print(Piece.possible_pieces[0])
-        print()
-        print(self.piece)
-        print()
+                    #distance from center to next block that is not empty in new map(horizoontal and vertical distance)
+                    row_dist = r - center_index[0]
+                    col_dist = c - center_index[1]
+                    
+                    #new coords are the distance + center_coord
+                    self.piece[r][c] = [center_coord[0] + row_dist, center_coord[1] + col_dist]
+        #render            
         self.draw()
 
     #returns all leftmost, rightmost, and bottom most coords of blocks of the piece
@@ -302,7 +178,7 @@ class Piece():
 
         return [left, right, bottom]
 
-#main game handling method
+#handles game
 class GameBoard():
     def __init__(self):
 
@@ -315,7 +191,7 @@ class GameBoard():
 
         #timing vars for the falling piece
         self.start_time = time.time()
-        self.piece_fall_delay = 0.6
+        self.piece_fall_delay = DEFAULT_PIECE_FALL_DELAY
 
 
     def drawPieces(self):
@@ -350,7 +226,7 @@ class GameBoard():
                     self.board[row][col] = self.current_piece.color #color of the piece is stored in board
 
     #returns highest occupied row in the requested column NOTE: change name
-    def getRowMaxHeight(self, col, currentRow):
+    def getBottomObstructingRow(self, col, currentRow):
         for r in range(currentRow, len(self.board), 1):
             if self.board[r][col] != 0:
                 return r
@@ -370,11 +246,20 @@ class GameBoard():
                 return c
         return GRID.getCols()
 
+    #checks if piece is in bounds (left, right, and bottom)
+    def isInBounds(self, piece):
+        for r in range(len(piece)):
+            for c in range(len(piece[r])):
+                if piece[r][c] != 0:
+                    if self.board[r][c] != 0 or piece[r][c][1] < 0 or piece[r][c][1] >= GRID.getCols():
+                        return False
+        return True
+
     def quickFall(self, flag):
         if flag:
-            self.piece_fall_delay = 0.06
+            self.piece_fall_delay = PIECE_QUICK_FALL_DELAY
         else:
-            self.piece_fall_delay = 0.3
+            self.piece_fall_delay = DEFAULT_PIECE_FALL_DELAY
 
 # Display graphics method 
 def displayGraphics():
@@ -415,50 +300,23 @@ def main():
                     GAMEBOARD.quickFall(False)
 
 
-        #calling graphics methods
+        #calling graphics method
         displayGraphics() 
 
         pygame.display.update()
         CLOCK.tick(60)
 
 
-#static varibles meant to be accesed by all classes and funcs
 
 
-WIDTH = 800
-HEIGHT = 640
-CELL_SIZE = 40
-#col space is the space to the left and right of the grid(in no of cols)
-COL_SPACE = 4
-
+#init pygame window
 SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Tetris")
 CLOCK = pygame.time.Clock()
 
-
-#initializing fonts
-font1 = pygame.font.SysFont('comicsansms', 12, True)
-font2 = pygame.font.SysFont('comicsansms', 25, False, True)
-font3 = pygame.font.SysFont('comicsansms', 50, False, True)
-
-
-#colors
-BROWN = (100, 31, 22)
-PURPLE = (136, 78, 160)
-BLUE = (53, 152, 219)
-RED = (204, 67, 54)
-GREEN = (28, 125, 70)
-ORANGE = (230, 126, 33)
-BLACK = (0, 0, 0)
-
-BG_COLOR = (200, 200, 200)
-
-COLORS = [RED, BLUE, PURPLE, GREEN, ORANGE, BROWN]
-
 #creating objects
 GRID = Grid()
 GAMEBOARD = GameBoard()
-
 
 if __name__ == '__main__':
    main()
