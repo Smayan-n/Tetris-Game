@@ -1,7 +1,7 @@
 #Tetris with pygame
 
 from copy import deepcopy
-import pygame, sys, time, math, random
+import pygame, sys, time, json, random
 from constants import *
 
 pygame.init()
@@ -71,13 +71,13 @@ class Piece():
             for c in range(len(self.piece[r])):
                 if(self.piece[r][c] != 0):
                     # pygame.draw.rect(SCREEN, self.color, (CELL_SIZE * (self.piece[r][c][1] + COL_SPACE), CELL_SIZE * (self.piece[r][c][0]), CELL_SIZE, CELL_SIZE))
-                    SCREEN.blit(BLOCK_ASSETS[self.piece_selection_index], (CELL_SIZE * (self.piece[r][c][1] + COL_SPACE), CELL_SIZE * (self.piece[r][c][0]), CELL_SIZE, CELL_SIZE))
+                    SCREEN.blit(BLOCK_ASSETS[self.piece_selection_index], (CELL_SIZE * (self.piece[r][c][1] + COL_SPACE), CELL_SIZE * (self.piece[r][c][0])))
         
     #moves piece down by one row each time           
     def fall(self):
         #increasing score in quick fall
-        if GAMEBOARD.piece_fall_delay == PIECE_QUICK_FALL_DELAY:
-            GAMEBOARD.increaseScore(1)
+        if GAMECONTROL.piece_fall_delay == PIECE_QUICK_FALL_DELAY:
+            GAMECONTROL.increaseScore(1)
 
         #creating a test piece to check bounds
         test_piece = deepcopy(self.piece)
@@ -89,14 +89,15 @@ class Piece():
                     test_piece[r][c][0] += 1
 
         #if, after moving, test piece is not in bounds
-        if not GAMEBOARD.pieceInBounds(test_piece):
+        if not GAMECONTROL.pieceInBounds(test_piece):
             #if it does, then the piece is placed on the board
             #adding piece to game board
-            GAMEBOARD.addSettledPiece(self.piece)
+            GAMECONTROL.addSettledPiece(self.piece)
             #setting current piece to the next piece
-            GAMEBOARD.current_piece = GAMEBOARD.next_piece
+            GAMECONTROL.current_piece = GAMECONTROL.next_piece
             #creating a new Next piece
-            GAMEBOARD.next_piece = Piece()
+            GAMECONTROL.next_piece = GAMECONTROL.next_next_piece
+            GAMECONTROL.next_next_piece = Piece()
             return
 
         #if in bounds - set test_piece to real piece
@@ -114,7 +115,7 @@ class Piece():
                     test_piece[r][c][1] += shift
 
         #if, after moving, test piece is not in bounds
-        if not GAMEBOARD.pieceInBounds(test_piece):
+        if not GAMECONTROL.pieceInBounds(test_piece):
             return
 
         #if in bounds - set test_piece to real piece
@@ -146,7 +147,7 @@ class Piece():
                     test_piece[r][c] = [center_coord[0] + row_dist, center_coord[1] + col_dist]
         
         #if, after moving, test piece is not in bounds
-        if not GAMEBOARD.pieceInBounds(test_piece):
+        if not GAMECONTROL.pieceInBounds(test_piece):
             return
         
         #if in bounds - set test_piece to real piece
@@ -155,7 +156,7 @@ class Piece():
         self.drawPiece()                  
     
 #handles game
-class GameBoard():
+class GameControl():
     def __init__(self):
 
         #board with all cells in game board
@@ -164,16 +165,26 @@ class GameBoard():
 
         #piece currently falling
         self.current_piece = Piece()
-        #next piece
+        #next pieces
         self.next_piece = Piece()
+        self.next_next_piece = Piece()
 
         #timing vars for the falling piece
         self.start_time = time.time()
         self.piece_fall_delay = PIECE_DEFAULT_FALL_DELAY
 
-        #score
+        #score and lines cleared
+        self.lines_cleared = 0
         self.score = 0
         self.high_score = 0
+        #load high score from file
+        self.loadHighScore()
+    
+    def loadHighScore(self):
+        with open("high_score.json", "r") as f:
+            data = json.load(f)
+        
+        self.high_score = data["high_score"]
 
 
     def drawPieces(self):
@@ -196,7 +207,7 @@ class GameBoard():
         for r in range(len(self.board)):
             for c in range(len(self.board[r])):
                 if self.board[r][c] != 0:
-                    SCREEN.blit(BLOCK_ASSETS[self.board[r][c] - 1], (CELL_SIZE * (c + COL_SPACE), CELL_SIZE * (r), CELL_SIZE, CELL_SIZE))
+                    SCREEN.blit(BLOCK_ASSETS[self.board[r][c] - 1], (CELL_SIZE * (c + COL_SPACE), CELL_SIZE * (r)))
 
                     
     #adds piece to game board after it reaches bottom
@@ -253,7 +264,8 @@ class GameBoard():
             for c in range(len(self.board[r])):
                 self.board[r][c] = self.board[r - 1][c]
 
-        #increase score
+        #increase score and lines cleared
+        self.lines_cleared += 1
         self.increaseScore(50)
 
     #changes piece_fall_delay so piece fall faster when doen arrow in clicked
@@ -279,13 +291,14 @@ class GameBoard():
         self.board = [[0 for i in range(GRID.getCols())] for j in range(GRID.getRows())]
 
         self.score = 0
+        self.lines_cleared = 0
 
-    #draw's next piece that is goint to come
-    def drawNextPiece(self):
-        for r in range(len(self.next_piece.piece)):
-            for c in range(len(self.next_piece.piece[r])):
-                if self.next_piece.piece[r][c] != 0:
-                    SCREEN.blit(BLOCK_ASSETS[self.next_piece.piece_selection_index], (CELL_SIZE * (c + GRID.getCols() + COL_SPACE), CELL_SIZE * (r + 1), CELL_SIZE, CELL_SIZE))
+    #draw's next pieces that are going to come
+    def drawNextPiece(self, piece, y):
+        for r in range(len(piece.piece)):
+            for c in range(len(piece.piece[r])):
+                if piece.piece[r][c] != 0:
+                    SCREEN.blit(BLOCK_ASSETS[piece.piece_selection_index], (CELL_SIZE * (c + GRID.getCols() + COL_SPACE), CELL_SIZE * (r + 1) + y))
 
 # Display graphics method 
 def displayGraphics():
@@ -298,26 +311,32 @@ def displayGraphics():
     GRID.drawGrid()
 
     #draw all game board features
-    GAMEBOARD.drawPieces()
+    GAMECONTROL.drawPieces()
 
     #display UI - scores, next piece info, etc
     
     #labels
     score_lbl = FONT3.render("Score", True, RED)
-    score = FONT3.render(str(GAMEBOARD.score), True, RED)
+    score = FONT3.render(str(GAMECONTROL.score), True, RED)
     SCREEN.blit(score_lbl, ((COL_SPACE * CELL_SIZE)//2 - score_lbl.get_width()//2, 0)) 
     SCREEN.blit(score, ((COL_SPACE * CELL_SIZE)//2 - score.get_width()//2, 50)) 
 
     high_score_lbl = FONT1.render("High Score", True, RED)
-    high_score = FONT1.render(str(GAMEBOARD.high_score), True, RED)
+    high_score = FONT1.render(str(GAMECONTROL.high_score), True, RED)
     SCREEN.blit(high_score_lbl, ((COL_SPACE * CELL_SIZE)//2 - high_score_lbl.get_width()//2, 150)) 
     SCREEN.blit(high_score, ((COL_SPACE * CELL_SIZE)//2 - high_score.get_width()//2, 200)) 
+
+    lines_cleared_lbl = FONT3.render("Lines", True, RED)
+    lines_cleared = FONT3.render(str(GAMECONTROL.lines_cleared), True, RED)
+    SCREEN.blit(lines_cleared_lbl, ((COL_SPACE * CELL_SIZE)//2 - lines_cleared_lbl.get_width()//2, SCREEN.get_height() - 150)) 
+    SCREEN.blit(lines_cleared, ((COL_SPACE * CELL_SIZE)//2 - lines_cleared.get_width()//2, SCREEN.get_height() - 100)) 
 
     next_piece_lbl = FONT3.render("Next", True, RED)
     SCREEN.blit(next_piece_lbl, ((GRID.getCols() + COL_SPACE)*(CELL_SIZE) + (COL_SPACE * CELL_SIZE)//2 - next_piece_lbl.get_width()//2, 0))
 
-    #draw next piece
-    GAMEBOARD.drawNextPiece()
+    #draw next pieces
+    GAMECONTROL.drawNextPiece(GAMECONTROL.next_piece, 0)
+    GAMECONTROL.drawNextPiece(GAMECONTROL.next_next_piece, 150)
 
 
 def main():
@@ -326,23 +345,29 @@ def main():
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+
+                #save high score in file
+                json_data = {"high_score": GAMECONTROL.high_score}
+                with open("high_score.json", "w") as f:
+                    json.dump(json_data, f, indent=4)
+
                 pygame.quit()
                 sys.exit()
             
             #key events
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
-                    GAMEBOARD.current_piece.updatePos(-1)
+                    GAMECONTROL.current_piece.updatePos(-1)
                 if event.key == pygame.K_RIGHT:
-                    GAMEBOARD.current_piece.updatePos(1)
+                    GAMECONTROL.current_piece.updatePos(1)
                 if event.key == pygame.K_UP:
-                    GAMEBOARD.current_piece.rotatePiece()
+                    GAMECONTROL.current_piece.rotatePiece()
                 if event.key == pygame.K_DOWN:
-                    GAMEBOARD.quickFall(True)
+                    GAMECONTROL.quickFall(True)
             
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_DOWN:
-                    GAMEBOARD.quickFall(False)
+                    GAMECONTROL.quickFall(False)
 
 
         #calling graphics method
@@ -355,7 +380,7 @@ def main():
 
 #creating objects
 GRID = Grid()
-GAMEBOARD = GameBoard()
+GAMECONTROL = GameControl()
 
 if __name__ == '__main__':
    main()

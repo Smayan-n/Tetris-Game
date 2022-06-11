@@ -6,9 +6,9 @@ pygame.init()
 
 WIDTH = 800
 HEIGHT = 700
-CELL_SIZE = 38
+CELL_SIZE = 36
 #col space is the space to the left and right of the grid(in no of cols)
-COL_SPACE = 5
+COL_SPACE = 6
 
 #init pygame window
 SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -59,7 +59,7 @@ PIECE_TEMPLATES = [
         [
         [0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0],
-        [1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1],
         [0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0],
         ],
@@ -69,14 +69,14 @@ PIECE_TEMPLATES = [
         [0, 0, 1, 0, 0],
         [0, 0, 1, 0, 0],
         [0, 0, 0, 0, 0],
-        ]
+        ],
     ],
     #O=Block
     [
         [ 
         [0, 0, 0, 0, 0],
-        [0, 1, 1, 0, 0],
-        [0, 1, 1, 0, 0],
+        [0, 0, 1, 1, 0],
+        [0, 0, 1, 1, 0],
         [0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0],
         ]
