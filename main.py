@@ -39,15 +39,15 @@ class Piece():
     def __init__(self):
 
         #initial starting row and column of piece (top left block)
-        #COL_SPCAE is the starting column here
-        self.start_row = -1 #NOTE figure out why pieces are spawning lower
+        #COL_SPACE is the starting column here
+        self.start_row = -2 
         self.start_col = 3
 
         #used to determine which rotation map of the piece to load
         self.rotation = 0
 
-        #choosing random piece and color
-        self.piece_selection_index = random.randint(0, len(PIECE_TEMPLATES) - 1)
+        #choosing random piece and according color
+        self.piece_selection_index = 4 #random.randint(0, len(PIECE_TEMPLATES) - 1)
         self.num_rotation_maps = len(PIECE_TEMPLATES[self.piece_selection_index])
 
         self.piece = PIECE_TEMPLATES[self.piece_selection_index][self.rotation % self.num_rotation_maps]
@@ -64,46 +64,9 @@ class Piece():
 
                     self.piece[r][c] = [self.start_row + r, self.start_col + c]
 
-    
-    #function to change coordinates of piece - also checks if piece is out of bounds
-    def move(self, row_shift, col_shift):
-        print(GAMEBOARD.isInBounds(self.piece))
-        # #check for bounds - only updatePos piece if the next position of the piece legal(no other piece in the way)
-        # #left
-        # for coord in self.getKeyBlocks()[0]:
-        #     if coord[1] + col_shift <= GAMEBOARD.getLeftObstructingCol(coord[0], coord[1]):
-        #         return
-        # #right
-        # for coord in self.getKeyBlocks()[1]:
-        #     if coord[1] + col_shift >= GAMEBOARD.getRightObstructingCol(coord[0], coord[1]):
-        #         return
-
-        #checks if piece makes it to the bottom or sits on top of another piece
-        for coord in self.getKeyBlocks()[2]:
-            if (coord[0] + row_shift >= GAMEBOARD.getBottomObstructingRow(coord[1], coord[0])):
-                #if it does, then the piece is placed on the board
-                #adding piece to game board
-                GAMEBOARD.addSettledPiece(self.piece)
-                #setting current piece to a new piece
-                GAMEBOARD.current_piece = Piece()
-                break
-
-        test_piece = deepcopy(self.piece)
-
-        #updatePos
-        for r in range(len(test_piece)):
-            for c in range(len(test_piece[r])):
-                if(test_piece[r][c] != 0):
-                    test_piece[r][c][0] += row_shift
-                    test_piece[r][c][1] += col_shift
-
-        if GAMEBOARD.isInBounds(test_piece):
-            self.piece = test_piece
-        else:
-            return
-                
+               
     #draw's piece
-    def draw(self):
+    def drawPiece(self):
         for r in range(len(self.piece)):
             for c in range(len(self.piece[r])):
                 if(self.piece[r][c] != 0):
@@ -111,15 +74,55 @@ class Piece():
         
     #moves piece down by one row each time           
     def fall(self):
-        self.move(1, 0)
+        #increasing score in quick fall
+        if GAMEBOARD.piece_fall_delay == PIECE_QUICK_FALL_DELAY:
+            GAMEBOARD.increaseScore(1)
+
+        #creating a test piece to check bounds
+        test_piece = deepcopy(self.piece)
+
+        #updatePos
+        for r in range(len(test_piece)):
+            for c in range(len(test_piece[r])):
+                if(test_piece[r][c] != 0):
+                    test_piece[r][c][0] += 1
+
+        #if, after moving, test piece is not in bounds
+        if not GAMEBOARD.pieceInBounds(test_piece):
+            #if it does, then the piece is placed on the board
+            #adding piece to game board
+            GAMEBOARD.addSettledPiece(self.piece)
+            #setting current piece to the next piece
+            GAMEBOARD.current_piece = GAMEBOARD.next_piece
+            #creating a new Next piece
+            GAMEBOARD.next_piece = Piece()
+            return
+
+        #if in bounds - set test_piece to real piece
+        self.piece = test_piece 
 
     #updatePos piece pos (move left or right)
-    def updatePos(self, dir):
-        self.move(0, dir)
-        #redners piece on screen (updatePos before graphics function so there is immideiate change)
-        self.draw()
+    def updatePos(self, shift):
+        #creating a test piece to check bounds
+        test_piece = deepcopy(self.piece)
 
-    #rotates picece by 90 degrees every click
+        #updatePos
+        for r in range(len(test_piece)):
+            for c in range(len(test_piece[r])):
+                if(test_piece[r][c] != 0):
+                    test_piece[r][c][1] += shift
+
+        #if, after moving, test piece is not in bounds
+        if not GAMEBOARD.pieceInBounds(test_piece):
+            return
+
+        #if in bounds - set test_piece to real piece
+        self.piece = test_piece
+        #redners piece on screen (updatePos before graphics function so there is immideiate change)
+        self.drawPiece()
+
+
+    #rotatePieces picece by 90 degrees every click
     def rotatePiece(self):
         self.rotation += 1
 
@@ -127,57 +130,29 @@ class Piece():
         center_coord = self.piece[len(self.piece) // 2][len(self.piece[0]) // 2]
         center_index = [len(self.piece) // 2, len(self.piece[0]) // 2]
 
-        #load the same piece with different rotation map
-        self.piece = PIECE_TEMPLATES[self.piece_selection_index][self.rotation % self.num_rotation_maps]
+        #load the same piece with different rotation map - in a test_piece to check bounds
+        test_piece = PIECE_TEMPLATES[self.piece_selection_index][self.rotation % self.num_rotation_maps]
 
         #using center_coord and center_index to calculate and set coordinates of new rotation map
-        for r in range(len(self.piece)):
-            for c in range(len(self.piece[r])):
-                if(self.piece[r][c] != 0):
+        for r in range(len(test_piece)):
+            for c in range(len(test_piece[r])):
+                if(test_piece[r][c] != 0):
                     #distance from center to next block that is not empty in new map(horizoontal and vertical distance)
                     row_dist = r - center_index[0]
                     col_dist = c - center_index[1]
                     
                     #new coords are the distance + center_coord
-                    self.piece[r][c] = [center_coord[0] + row_dist, center_coord[1] + col_dist]
-        #render            
-        self.draw()
-
-    #returns all leftmost, rightmost, and bottom most coords of blocks of the piece
-    def getKeyBlocks(self):
-        left = []
-        right = []
-        bottom = []
-
-        #left and right
-        for r in range(len(self.piece)):
-            for c in range(len(self.piece[r])):
-                if self.piece[r][c] != 0:
-                    #for left 
-                    if c > 0 and self.piece[r][c - 1] == 0:
-                        left.append(self.piece[r][c])
-                    elif c == 0:
-                        left.append(self.piece[r][c])
-
-                    #for right
-                    if c < len(self.piece[r]) - 1 and self.piece[r][c + 1] == 0:
-                        right.append(self.piece[r][c])
-                    elif c == len(self.piece[r]) - 1:
-                        right.append(self.piece[r][c])
-
-        #bottom
-        for r in range(len(self.piece)):
-            for c in range(len(self.piece[r])):
-                if self.piece[r][c] != 0:
-                    #for bottom
-                    if r < len(self.piece) - 1 and self.piece[r+1][c] == 0:
-                        bottom.append(self.piece[r][c])
-                    elif r == len(self.piece) - 1:
-                        bottom.append(self.piece[r][c])
+                    test_piece[r][c] = [center_coord[0] + row_dist, center_coord[1] + col_dist]
         
-
-        return [left, right, bottom]
-
+        #if, after moving, test piece is not in bounds
+        if not GAMEBOARD.pieceInBounds(test_piece):
+            return
+        
+        #if in bounds - set test_piece to real piece
+        self.piece = test_piece
+        #render            
+        self.drawPiece()                  
+    
 #handles game
 class GameBoard():
     def __init__(self):
@@ -188,28 +163,35 @@ class GameBoard():
 
         #piece currently falling
         self.current_piece = Piece()
+        #next piece
+        self.next_piece = Piece()
 
         #timing vars for the falling piece
         self.start_time = time.time()
-        self.piece_fall_delay = DEFAULT_PIECE_FALL_DELAY
+        self.piece_fall_delay = PIECE_DEFAULT_FALL_DELAY
+
+        #score
+        self.score = 0
+        self.high_score = 0
 
 
     def drawPieces(self):
-        self.drawSettledPieces() 
 
         #the Piece.fall() function runs at a slower interval than the main game loop(pieces have to fall slow)
         current_time = time.time()
         if current_time - self.start_time >= self.piece_fall_delay:
-            self.current_piece.fall()        
+            self.current_piece.fall() 
+            self.checkRowComplete()
 
             #start time reset
             self.start_time = time.time()
 
         #piece draw function running at game loop interval
-        self.current_piece.draw()
+        self.current_piece.drawPiece()
+        self.drawBoard() 
     
     #draw pieces in self.board (pieces after they are Settled)
-    def drawSettledPieces(self):
+    def drawBoard(self):
         for r in range(len(self.board)):
             for c in range(len(self.board[r])):
                 if self.board[r][c] != 0:
@@ -218,6 +200,7 @@ class GameBoard():
                     
     #adds piece to game board after it reaches bottom
     def addSettledPiece(self, piece):
+
         for r in range(len(piece)):
             for c in range(len(piece[r])):
                 if piece[r][c] != 0:
@@ -225,45 +208,88 @@ class GameBoard():
                     col = piece[r][c][1]
                     self.board[row][col] = self.current_piece.color #color of the piece is stored in board
 
-    #returns highest occupied row in the requested column NOTE: change name
-    def getBottomObstructingRow(self, col, currentRow):
-        for r in range(currentRow, len(self.board), 1):
-            if self.board[r][col] != 0:
-                return r
-        return GRID.getRows()
-    
-    #returns the closest occupied column to the left in the requested row
-    def getLeftObstructingCol(self, row, currentCol):
-        for c in range(currentCol, -1, -1):
-            if self.board[row][c] != 0:
-                return c
-        return -1
+        #checking if game is lost
+        self.isGameLost()
 
-    #returns the closest occupied column to the right in the requested row
-    def getRightObstructingCol(self, row, currentCol):
-        for c in range(currentCol, len(self.board[row]), 1):
-            if self.board[row][c] != 0:
-                return c
-        return GRID.getCols()
 
     #checks if piece is in bounds (left, right, and bottom)
-    def isInBounds(self, piece):
+    def pieceInBounds(self, piece):
         for r in range(len(piece)):
             for c in range(len(piece[r])):
                 if piece[r][c] != 0:
-                    if self.board[r][c] != 0 or piece[r][c][1] < 0 or piece[r][c][1] >= GRID.getCols():
+                    row = piece[r][c][0]
+                    col = piece[r][c][1]                                        #if this is not 0, there is a block in that position
+                    if  row >= GRID.getRows() or col < 0 or col >= GRID.getCols() or self.board[row][col] != 0:
                         return False
         return True
+    
+    #checks if game is lost (pieces build up to the top)
+    def isGameLost(self):
+        #if top row has setteled piece, you loose
+        for c in range(len(self.board[0])):
+            if self.board[0][c] != 0:
+                           
+                #reset game
+                self.reset()
 
+    #checks if any rows are completely filled
+    def checkRowComplete(self):
+        for r in range(len(self.board)):
+            complete = True
+            for c in range(len(self.board[r])):
+                if self.board[r][c] == 0:
+                    complete = False
+
+            #if any row is complete, it is cleared
+            if complete:
+                self.clearRow(r)
+    
+    #clears given row and brings all other rows on top down
+    def clearRow(self, row):
+        #clear
+        self.board[row] = list(map(lambda x: 0, self.board[row]))
+
+        #bring rows above down to fill the gap created
+        for r in range(row, 0, -1):
+            for c in range(len(self.board[r])):
+                self.board[r][c] = self.board[r - 1][c]
+
+        #increase score
+        self.increaseScore(50)
+
+    #changes piece_fall_delay so piece fall faster when doen arrow in clicked
     def quickFall(self, flag):
         if flag:
             self.piece_fall_delay = PIECE_QUICK_FALL_DELAY
         else:
-            self.piece_fall_delay = DEFAULT_PIECE_FALL_DELAY
+            self.piece_fall_delay = PIECE_DEFAULT_FALL_DELAY
+    
+    def increaseScore(self, amount):
+        self.score += amount
+        if self.score > self.high_score:
+            self.high_score = self.score
+    
+    def reset(self):
+        #display game over
+        game_over_lbl = FONT2.render("Game Over", True, RED)
+        SCREEN.blit(game_over_lbl, (SCREEN.get_width()//2 - game_over_lbl.get_width()//2, SCREEN.get_height()//2 - game_over_lbl.get_height()//2)) 
+        pygame.display.update()
+        pygame.time.delay(1000)
+
+        #reset board
+        self.board = [[0 for i in range(GRID.getCols())] for j in range(GRID.getRows())]
+
+        self.score = 0
+
+    #draw's next piece that is goint to come
+    def drawNextPiece(self):
+        for r in range(len(self.next_piece.piece)):
+            for c in range(len(self.next_piece.piece[r])):
+                if self.next_piece.piece[r][c] != 0:
+                    pygame.draw.rect(SCREEN, self.next_piece.color, (CELL_SIZE * (c + GRID.getCols() + COL_SPACE), CELL_SIZE * (r + 1), CELL_SIZE, CELL_SIZE))
 
 # Display graphics method 
 def displayGraphics():
-    global start_time
 
     #fill background
     SCREEN.fill(BG_COLOR)
@@ -273,7 +299,26 @@ def displayGraphics():
 
     #draw all game board features
     GAMEBOARD.drawPieces()
+
+    #display UI - scores, next piece info, etc
     
+    #labels
+    score_lbl = FONT3.render("Score", True, RED)
+    score = FONT3.render(str(GAMEBOARD.score), True, RED)
+    SCREEN.blit(score_lbl, ((COL_SPACE * CELL_SIZE)//2 - score_lbl.get_width()//2, 0)) 
+    SCREEN.blit(score, ((COL_SPACE * CELL_SIZE)//2 - score.get_width()//2, 50)) 
+
+    high_score_lbl = FONT1.render("High Score", True, RED)
+    high_score = FONT1.render(str(GAMEBOARD.high_score), True, RED)
+    SCREEN.blit(high_score_lbl, ((COL_SPACE * CELL_SIZE)//2 - high_score_lbl.get_width()//2, 150)) 
+    SCREEN.blit(high_score, ((COL_SPACE * CELL_SIZE)//2 - high_score.get_width()//2, 200)) 
+
+    next_piece_lbl = FONT3.render("Next", True, RED)
+    SCREEN.blit(next_piece_lbl, ((GRID.getCols() + COL_SPACE)*(CELL_SIZE) + (COL_SPACE * CELL_SIZE)//2 - next_piece_lbl.get_width()//2, 0))
+
+    #draw next piece
+    GAMEBOARD.drawNextPiece()
+
 
 def main():
    
@@ -302,11 +347,8 @@ def main():
 
         #calling graphics method
         displayGraphics() 
-
         pygame.display.update()
         CLOCK.tick(60)
-
-
 
 
 #init pygame window

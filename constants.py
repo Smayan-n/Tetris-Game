@@ -7,17 +7,17 @@ WIDTH = 800
 HEIGHT = 700
 CELL_SIZE = 38
 #col space is the space to the left and right of the grid(in no of cols)
-COL_SPACE = 4
+COL_SPACE = 5
 
 #delay in seconds for pieces to fall one row
-DEFAULT_PIECE_FALL_DELAY = 0.4
-PIECE_QUICK_FALL_DELAY = 0.06
+PIECE_DEFAULT_FALL_DELAY = 0.4
+PIECE_QUICK_FALL_DELAY = 0.05
 
 
 #initializing fonts
-font1 = pygame.font.SysFont('comicsansms', 12, True)
-font2 = pygame.font.SysFont('comicsansms', 25, False, True)
-font3 = pygame.font.SysFont('comicsansms', 50, False, True)
+FONT1 = pygame.font.SysFont('comicsansms', 32, False)
+FONT2 = pygame.font.SysFont('comicsansms', 100, False)
+FONT3 = pygame.font.SysFont('comicsansms', 40, False)
 
 
 #colors
@@ -140,11 +140,12 @@ PIECE_TEMPLATES = [
         ],
         [
         [0, 0, 0, 0, 0],
+        [0, 0, 0, 1, 0],
+        [0, 0, 1, 1, 0],
         [0, 0, 1, 0, 0],
-        [0, 1, 1, 0, 0],
-        [0, 1, 0, 0, 0],
         [0, 0, 0, 0, 0],
         ],
+        
         
     ], 
     #S-Block
