@@ -26,14 +26,14 @@ FONT2 = pygame.font.SysFont('comicsansms', 100, False)
 FONT3 = pygame.font.SysFont('comicsansms', 40, False)
 
 
-#tetris box assets
-BOX_ASSETS = []
+#tetris block assets
+BLOCK_ASSETS = []
 #for each asset in the folder
 for filename in os.listdir("assets/blocks"):
-    #load each box asset, resize and add to list
-    box = pygame.image.load("assets/blocks/"+filename)
-    box = pygame.transform.smoothscale(box.convert_alpha(), (CELL_SIZE, CELL_SIZE))
-    BOX_ASSETS.append(box)
+    #load each block asset, resize and add to list
+    block = pygame.image.load("assets/blocks/"+filename)
+    block = pygame.transform.smoothscale(block.convert_alpha(), (CELL_SIZE, CELL_SIZE))
+    BLOCK_ASSETS.append(block)
 
 #colors
 YELLOW = (210, 210, 0)

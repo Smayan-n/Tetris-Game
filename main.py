@@ -71,7 +71,7 @@ class Piece():
             for c in range(len(self.piece[r])):
                 if(self.piece[r][c] != 0):
                     # pygame.draw.rect(SCREEN, self.color, (CELL_SIZE * (self.piece[r][c][1] + COL_SPACE), CELL_SIZE * (self.piece[r][c][0]), CELL_SIZE, CELL_SIZE))
-                    SCREEN.blit(BOX_ASSETS[self.piece_selection_index], (CELL_SIZE * (self.piece[r][c][1] + COL_SPACE), CELL_SIZE * (self.piece[r][c][0]), CELL_SIZE, CELL_SIZE))
+                    SCREEN.blit(BLOCK_ASSETS[self.piece_selection_index], (CELL_SIZE * (self.piece[r][c][1] + COL_SPACE), CELL_SIZE * (self.piece[r][c][0]), CELL_SIZE, CELL_SIZE))
         
     #moves piece down by one row each time           
     def fall(self):
@@ -196,7 +196,7 @@ class GameBoard():
         for r in range(len(self.board)):
             for c in range(len(self.board[r])):
                 if self.board[r][c] != 0:
-                    SCREEN.blit(BOX_ASSETS[self.board[r][c] - 1], (CELL_SIZE * (c + COL_SPACE), CELL_SIZE * (r), CELL_SIZE, CELL_SIZE))
+                    SCREEN.blit(BLOCK_ASSETS[self.board[r][c] - 1], (CELL_SIZE * (c + COL_SPACE), CELL_SIZE * (r), CELL_SIZE, CELL_SIZE))
 
                     
     #adds piece to game board after it reaches bottom
@@ -285,7 +285,7 @@ class GameBoard():
         for r in range(len(self.next_piece.piece)):
             for c in range(len(self.next_piece.piece[r])):
                 if self.next_piece.piece[r][c] != 0:
-                    SCREEN.blit(BOX_ASSETS[self.next_piece.piece_selection_index], (CELL_SIZE * (c + GRID.getCols() + COL_SPACE), CELL_SIZE * (r + 1), CELL_SIZE, CELL_SIZE))
+                    SCREEN.blit(BLOCK_ASSETS[self.next_piece.piece_selection_index], (CELL_SIZE * (c + GRID.getCols() + COL_SPACE), CELL_SIZE * (r + 1), CELL_SIZE, CELL_SIZE))
 
 # Display graphics method 
 def displayGraphics():
