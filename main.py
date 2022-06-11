@@ -47,7 +47,7 @@ class Piece():
         self.rotation = 0
 
         #choosing random piece and according color
-        self.piece_selection_index = 4 #random.randint(0, len(PIECE_TEMPLATES) - 1)
+        self.piece_selection_index = random.randint(0, len(PIECE_TEMPLATES) - 1)
         self.num_rotation_maps = len(PIECE_TEMPLATES[self.piece_selection_index])
 
         self.piece = PIECE_TEMPLATES[self.piece_selection_index][self.rotation % self.num_rotation_maps]
@@ -70,7 +70,8 @@ class Piece():
         for r in range(len(self.piece)):
             for c in range(len(self.piece[r])):
                 if(self.piece[r][c] != 0):
-                    pygame.draw.rect(SCREEN, self.color, (CELL_SIZE * (self.piece[r][c][1] + COL_SPACE), CELL_SIZE * (self.piece[r][c][0]), CELL_SIZE, CELL_SIZE))
+                    # pygame.draw.rect(SCREEN, self.color, (CELL_SIZE * (self.piece[r][c][1] + COL_SPACE), CELL_SIZE * (self.piece[r][c][0]), CELL_SIZE, CELL_SIZE))
+                    SCREEN.blit(BOX_ASSETS[self.piece_selection_index], (CELL_SIZE * (self.piece[r][c][1] + COL_SPACE), CELL_SIZE * (self.piece[r][c][0]), CELL_SIZE, CELL_SIZE))
         
     #moves piece down by one row each time           
     def fall(self):
@@ -195,7 +196,7 @@ class GameBoard():
         for r in range(len(self.board)):
             for c in range(len(self.board[r])):
                 if self.board[r][c] != 0:
-                    pygame.draw.rect(SCREEN, self.board[r][c], (CELL_SIZE * (c + COL_SPACE), CELL_SIZE * (r), CELL_SIZE, CELL_SIZE))
+                    SCREEN.blit(BOX_ASSETS[self.board[r][c] - 1], (CELL_SIZE * (c + COL_SPACE), CELL_SIZE * (r), CELL_SIZE, CELL_SIZE))
 
                     
     #adds piece to game board after it reaches bottom
@@ -206,11 +207,10 @@ class GameBoard():
                 if piece[r][c] != 0:
                     row = piece[r][c][0]
                     col = piece[r][c][1]
-                    self.board[row][col] = self.current_piece.color #color of the piece is stored in board
+                    self.board[row][col] = self.current_piece.piece_selection_index + 1 #selection index of the piece is stored in board
 
         #checking if game is lost
         self.isGameLost()
-
 
     #checks if piece is in bounds (left, right, and bottom)
     def pieceInBounds(self, piece):
@@ -227,8 +227,7 @@ class GameBoard():
     def isGameLost(self):
         #if top row has setteled piece, you loose
         for c in range(len(self.board[0])):
-            if self.board[0][c] != 0:
-                           
+            if self.board[0][c] != 0:            
                 #reset game
                 self.reset()
 
@@ -286,13 +285,14 @@ class GameBoard():
         for r in range(len(self.next_piece.piece)):
             for c in range(len(self.next_piece.piece[r])):
                 if self.next_piece.piece[r][c] != 0:
-                    pygame.draw.rect(SCREEN, self.next_piece.color, (CELL_SIZE * (c + GRID.getCols() + COL_SPACE), CELL_SIZE * (r + 1), CELL_SIZE, CELL_SIZE))
+                    SCREEN.blit(BOX_ASSETS[self.next_piece.piece_selection_index], (CELL_SIZE * (c + GRID.getCols() + COL_SPACE), CELL_SIZE * (r + 1), CELL_SIZE, CELL_SIZE))
 
 # Display graphics method 
 def displayGraphics():
 
     #fill background
     SCREEN.fill(BG_COLOR)
+
 
     #draw grid
     GRID.drawGrid()
@@ -347,14 +347,11 @@ def main():
 
         #calling graphics method
         displayGraphics() 
+
         pygame.display.update()
         CLOCK.tick(60)
 
-
-#init pygame window
-SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Tetris")
-CLOCK = pygame.time.Clock()
+#pygame screen initialized in constants.py
 
 #creating objects
 GRID = Grid()
