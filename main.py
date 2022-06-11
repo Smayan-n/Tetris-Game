@@ -317,7 +317,7 @@ def displayGraphics():
     
     #labels
     score_lbl = FONT3.render("Score", True, RED)
-    score = FONT3.render(str(GAMECONTROL.score), True, RED)
+    score = FONT3.render(str(GAMECONTROL.score), True, ORANGE)
     SCREEN.blit(score_lbl, ((COL_SPACE * CELL_SIZE)//2 - score_lbl.get_width()//2, 0)) 
     SCREEN.blit(score, ((COL_SPACE * CELL_SIZE)//2 - score.get_width()//2, 50)) 
 
@@ -327,7 +327,7 @@ def displayGraphics():
     SCREEN.blit(high_score, ((COL_SPACE * CELL_SIZE)//2 - high_score.get_width()//2, 200)) 
 
     lines_cleared_lbl = FONT3.render("Lines", True, RED)
-    lines_cleared = FONT3.render(str(GAMECONTROL.lines_cleared), True, RED)
+    lines_cleared = FONT3.render(str(GAMECONTROL.lines_cleared), True, ORANGE)
     SCREEN.blit(lines_cleared_lbl, ((COL_SPACE * CELL_SIZE)//2 - lines_cleared_lbl.get_width()//2, SCREEN.get_height() - 150)) 
     SCREEN.blit(lines_cleared, ((COL_SPACE * CELL_SIZE)//2 - lines_cleared.get_width()//2, SCREEN.get_height() - 100)) 
 
