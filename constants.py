@@ -22,7 +22,7 @@ PIECE_QUICK_FALL_DELAY = 0.05
 
 #initializing fonts
 FONT1 = pygame.font.SysFont('comicsansms', 32, False)
-FONT2 = pygame.font.SysFont('comicsansms', 100, False)
+FONT2 = pygame.font.SysFont('comicsansms', 80, False)
 FONT3 = pygame.font.SysFont('comicsansms', 40, False)
 
 

@@ -282,10 +282,10 @@ class GameControl():
     
     def reset(self):
         #display game over
-        game_over_lbl = FONT2.render("Game Over", True, RED)
+        game_over_lbl = FONT2.render("Game Over: " + str(self.score), True, RED)
         SCREEN.blit(game_over_lbl, (SCREEN.get_width()//2 - game_over_lbl.get_width()//2, SCREEN.get_height()//2 - game_over_lbl.get_height()//2)) 
         pygame.display.update()
-        pygame.time.delay(1000)
+        pygame.time.delay(1500)
 
         #reset board
         self.board = [[0 for i in range(GRID.getCols())] for j in range(GRID.getRows())]
