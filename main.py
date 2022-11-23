@@ -53,7 +53,7 @@ class Piece():
         self.piece = PIECE_TEMPLATES[self.piece_selection_index][self.rotation % self.num_rotation_maps]
         self.color = COLORS[self.piece_selection_index]
 
-        #initialize start postion of piece
+        #initialize start position of piece
         self.initPiecePos()
 
     def initPiecePos(self):
@@ -120,11 +120,11 @@ class Piece():
 
         #if in bounds - set test_piece to real piece
         self.piece = test_piece
-        #redners piece on screen (updatePos before graphics function so there is immideiate change)
+        #redners piece on screen (updatePos before graphics function so there is immediate change)
         self.drawPiece()
 
 
-    #rotatePieces picece by 90 degrees every click
+    #rotatePieces piece by 90 degrees every click
     def rotatePiece(self):
         self.rotation += 1
 
@@ -139,7 +139,7 @@ class Piece():
         for r in range(len(test_piece)):
             for c in range(len(test_piece[r])):
                 if(test_piece[r][c] != 0):
-                    #distance from center to next block that is not empty in new map(horizoontal and vertical distance)
+                    #distance from center to next block that is not empty in new map(horizontal and vertical distance)
                     row_dist = r - center_index[0]
                     col_dist = c - center_index[1]
                     
@@ -236,7 +236,7 @@ class GameControl():
     
     #checks if game is lost (pieces build up to the top)
     def isGameLost(self):
-        #if top row has setteled piece, you loose
+        #if top row has settled piece, you loose
         for c in range(len(self.board[0])):
             if self.board[0][c] != 0:            
                 #reset game
@@ -268,7 +268,7 @@ class GameControl():
         self.lines_cleared += 1
         self.increaseScore(50)
 
-    #changes piece_fall_delay so piece fall faster when doen arrow in clicked
+    #changes piece_fall_delay so piece fall faster when down arrow in clicked
     def quickFall(self, flag):
         if flag:
             self.piece_fall_delay = PIECE_QUICK_FALL_DELAY
